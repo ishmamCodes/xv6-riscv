@@ -27,6 +27,7 @@ int uptime(void);
 int sync(void);
 int ps(void);  //new system call for ps
 int sleep(int); //new system call for sleep with parameter
+int setpriority(int); //new system call for setpriority
 
 // ulib.c
 int stat(const char *, struct stat *);

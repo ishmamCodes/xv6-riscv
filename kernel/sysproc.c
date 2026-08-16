@@ -11,6 +11,27 @@ extern uint ticks;
 extern struct spinlock tickslock;
 
 
+//Modifications for lab 2
+uint64
+sys_setpriority(void)
+{
+  int pr;
+  argint(0, &pr);
+
+  if(pr < 1 || pr > 10)
+    return -1;
+
+  struct proc *p = myproc();
+  acquire(&p->lock);
+  p->priority = pr;
+  release(&p->lock);
+
+  return 0;
+}
+
+
+
+
 uint64
 sys_sleep(void)
 {

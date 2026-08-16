@@ -105,6 +105,7 @@ extern uint64 sys_close(void);
 extern uint64 sys_sync(void);
 extern uint64 sys_ps(void); //new system call for ps
 extern uint64 sys_sleep(void); //new system call for sleep with parameter
+extern uint64 sys_setpriority(void); //new system call for setpriority
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -134,6 +135,7 @@ static uint64 (*syscalls[])(void) = {
   [SYS_sync]    sys_sync,
   [SYS_ps]      sys_ps,
   [SYS_sleep]   sys_sleep, //new system call for sleep with parameter
+  [SYS_setpriority] sys_setpriority, //new system call for setpriority
 
 
   // clang-format on

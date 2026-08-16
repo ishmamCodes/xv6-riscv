@@ -227,6 +227,10 @@ userinit(void)
 
   p->state = RUNNABLE;
 
+  //Modifications for lab 2
+  p->priority = 1; // Set initial priority to 1
+  p->rounds = 0;   // Initialize rounds to 0
+
   release(&p->lock);
 }
 
@@ -299,6 +303,9 @@ kfork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+  //Modifications for lab 2
+  np->priority = p->priority; // Inherit priority from parent
+  np->rounds = 0;             // Initialize rounds to 0
   release(&np->lock);
 
   return pid;

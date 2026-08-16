@@ -23,3 +23,4 @@
 #define SYS_sync   22
 #define SYS_ps     23    //new system call for ps
 #define SYS_sleep  24   //new system call for sleep with parameter
+#define SYS_setpriority 25 //new system call for setpriority
