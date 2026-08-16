@@ -1,0 +1,5 @@
+make qemu
+make clean
+chmod u+x filename
+Cltrl + P
+Cltrl + A, X
