@@ -3,3 +3,8 @@ make clean
 chmod u+x filename
 Cltrl + P
 Cltrl + A, X
+
+$ test_priority 5 &
+1 sleep  init 1 38
+2 sleep  sh 1 18
+6 run    test_priority 5 23

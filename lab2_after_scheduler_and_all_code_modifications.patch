@@ -1,0 +1,113 @@
+diff --git a/instruction.txt b/instruction.txt
+index 2698ce4..486337e 100644
+--- a/instruction.txt
++++ b/instruction.txt
+@@ -2,4 +2,9 @@ make qemu
+ make clean
+ chmod u+x filename
+ Cltrl + P
+-Cltrl + A, X
+\ No newline at end of file
++Cltrl + A, X
++
++$ test_priority 5 &
++1 sleep  init 1 38
++2 sleep  sh 1 18
++6 run    test_priority 5 23
+\ No newline at end of file
+diff --git a/kernel/proc.c b/kernel/proc.c
+index c486ad0..20a93e3 100644
+--- a/kernel/proc.c
++++ b/kernel/proc.c
+@@ -431,44 +431,45 @@ kwait(uint64 addr)
+ void
+ scheduler(void)
+ {
+-  struct proc *p;
+   struct cpu *c = mycpu();
+-
+   c->proc = 0;
+-  for (;;) {
+-    // The most recent process to run may have had interrupts
+-    // turned off; enable them to avoid a deadlock if all
+-    // processes are waiting. Then turn them back off
+-    // to avoid a possible race between an interrupt
+-    // and wfi.
++  for(;;){
+     intr_on();
+     intr_off();
+ 
+-    int found = 0;
+-    for (p = proc; p < &proc[NPROC]; p++) {
++    struct proc *bestproc = 0;
++    int bestpriority = 11; // priorities are 0-10
++
++    for(struct proc *p = proc; p < &proc[NPROC]; p++) {
+       acquire(&p->lock);
+-      if (p->state == RUNNABLE) {
+-        // Switch to chosen process.  It is the process's job
+-        // to release its lock and then reacquire it
+-        // before jumping back to us.
+-        p->state = RUNNING;
+-        c->proc = p;
+-        swtch(&c->context, &p->context);
+-
+-        // Process is done running for now.
+-        // It should have changed its p->state before coming back.
+-        c->proc = 0;
+-        found = 1;
+-      }
++      if(p->state == RUNNABLE && p->priority < bestpriority) {
++        if (bestproc != 0) {
++          release(&bestproc->lock);
++        }
++        bestpriority = p->priority;
++        bestproc = p;
++      } else {
+       release(&p->lock);
++      }
+     }
+-    if (found == 0) {
+-      // nothing to run; stop running on this core until an interrupt.
++
++    if (bestproc == 0) {
++      // nothing to run
+       asm volatile("wfi");
++      continue;
+     }
++
++    bestproc->rounds++;
++    c->proc = bestproc;
++    bestproc->state = RUNNING;
++    swtch(&c->context, &bestproc->context);
++
++    c->proc = 0;
++    release(&bestproc->lock);
+   }
+ }
+ 
++
+ // Switch to scheduler.  Must hold only p->lock
+ // and have changed proc->state. Saves and restores
+ // intena because intena is a property of this
+@@ -685,14 +686,14 @@ procdump(void)
+   char *state;
+ 
+   printk("\n");
+-  for (p = proc; p < &proc[NPROC]; p++) {
+-    if (p->state == UNUSED)
+-      continue;
+-    if (p->state >= 0 && p->state < NELEM(states) && states[p->state])
++  for(p = proc; p < &proc[NPROC]; p++) {
++    if(p->state == UNUSED)
++    continue;
++    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+       state = states[p->state];
+     else
+       state = "???";
+-    printk("%d %s %s", p->pid, state, p->name);
+-    printk("\n");
++    printf("%d %s %s %d %d", p->pid, state, p->name, p->priority, p->rounds);
++    printf("\n");
+   }
+ }
