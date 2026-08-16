@@ -148,6 +148,8 @@ UPROGS=\
 	$U/_sync\
 	$U/_addDemo\
 	$U/_add_with_arg\
+	$U/_ps\
+
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

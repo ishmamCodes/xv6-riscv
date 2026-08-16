@@ -1,0 +1,81 @@
+diff --git a/Makefile b/Makefile
+index eca5cbd..ac6a8dc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -148,6 +148,8 @@ UPROGS=\
+ 	$U/_sync\
+ 	$U/_addDemo\
+ 	$U/_add_with_arg\
++	$U/_ps\
++
+ 
+ fs.img: mkfs/mkfs README $(UPROGS)
+ 	mkfs/mkfs fs.img README $(UPROGS)
+diff --git a/kernel/syscall.c b/kernel/syscall.c
+index 7fc48f5..4087d30 100644
+--- a/kernel/syscall.c
++++ b/kernel/syscall.c
+@@ -103,6 +103,7 @@ extern uint64 sys_link(void);
+ extern uint64 sys_mkdir(void);
+ extern uint64 sys_close(void);
+ extern uint64 sys_sync(void);
++extern uint64 sys_ps(void); //new system call for ps
+ 
+ // An array mapping syscall numbers from syscall.h
+ // to the function that handles the system call.
+@@ -130,6 +131,7 @@ static uint64 (*syscalls[])(void) = {
+   [SYS_mkdir]   sys_mkdir,
+   [SYS_close]   sys_close,
+   [SYS_sync]    sys_sync,
++  [SYS_ps]      sys_ps,
+   // clang-format on
+ };
+ 
+diff --git a/kernel/syscall.h b/kernel/syscall.h
+index 5a4a39f..d690dbc 100644
+--- a/kernel/syscall.h
++++ b/kernel/syscall.h
+@@ -21,3 +21,4 @@
+ #define SYS_mkdir  20
+ #define SYS_close  21
+ #define SYS_sync   22
++#define SYS_ps     23    //new system call for ps
+diff --git a/kernel/sysproc.c b/kernel/sysproc.c
+index 73ff1f3..2ca8947 100644
+--- a/kernel/sysproc.c
++++ b/kernel/sysproc.c
+@@ -7,6 +7,13 @@
+ #include "proc.h"
+ #include "vm.h"
+ 
++uint64
++sys_ps(void)
++{
++  procdump(); // print the process table to the console
++  return 0;
++}
++
+ uint64
+ sys_exit(void)
+ {
+diff --git a/user/user.h b/user/user.h
+index 29aad59..b69e545 100644
+--- a/user/user.h
++++ b/user/user.h
+@@ -25,6 +25,7 @@ char *sys_sbrk(int, int);
+ int pause(int);
+ int uptime(void);
+ int sync(void);
++int ps(void);  //new system call for ps
+ 
+ // ulib.c
+ int stat(const char *, struct stat *);
+diff --git a/user/usys.pl b/user/usys.pl
+index 4d054e8..fec1088 100755
+--- a/user/usys.pl
++++ b/user/usys.pl
+@@ -43,3 +43,4 @@ entry("sbrk");
+ entry("pause");
+ entry("uptime");
+ entry("sync");
++entry("ps"); #new system call for ps
