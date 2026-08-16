@@ -44,3 +44,4 @@ entry("pause");
 entry("uptime");
 entry("sync");
 entry("ps"); #new system call for ps
+entry("sleep"); #new system call for sleep with parameter

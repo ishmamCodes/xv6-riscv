@@ -149,6 +149,7 @@ UPROGS=\
 	$U/_addDemo\
 	$U/_add_with_arg\
 	$U/_ps\
+	$U/_sleep\
 
 
 fs.img: mkfs/mkfs README $(UPROGS)

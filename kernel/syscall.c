@@ -104,6 +104,7 @@ extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_sync(void);
 extern uint64 sys_ps(void); //new system call for ps
+extern uint64 sys_sleep(void); //new system call for sleep with parameter
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -132,6 +133,9 @@ static uint64 (*syscalls[])(void) = {
   [SYS_close]   sys_close,
   [SYS_sync]    sys_sync,
   [SYS_ps]      sys_ps,
+  [SYS_sleep]   sys_sleep, //new system call for sleep with parameter
+
+
   // clang-format on
 };
 

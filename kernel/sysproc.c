@@ -7,6 +7,42 @@
 #include "proc.h"
 #include "vm.h"
 
+extern uint ticks;
+extern struct spinlock tickslock;
+
+
+uint64
+sys_sleep(void)
+{
+  int n = 0;
+  uint ticks0;
+  // Read the first syscall argument (ticks) into n.
+  // Here we do not compare the return of argint; we just use it to store n.
+  
+  argint(0, &n);
+  
+  
+  // Defensive check: non-positive sleep duration does nothing.
+  if(n <= 0)
+    return 0;
+
+  acquire(&tickslock);
+  ticks0 = ticks;
+
+  while(ticks - ticks0 < (uint)n){
+  // If this process has been killed while sleeping, abort.
+    if(myproc()->killed){
+      release(&tickslock);
+    return -1;
+  }
+  // Sleep on the address of ticks while holding tickslock.
+  sleep(&ticks, &tickslock);
+  // When sleep() returns, tickslock has been re-acquired.
+}
+  release(&tickslock);
+  return 0;
+}
+
 uint64
 sys_ps(void)
 {

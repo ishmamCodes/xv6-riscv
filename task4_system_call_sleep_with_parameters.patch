@@ -1,0 +1,111 @@
+diff --git a/Makefile b/Makefile
+index ac6a8dc..fad9a54 100644
+--- a/Makefile
++++ b/Makefile
+@@ -149,6 +149,7 @@ UPROGS=\
+ 	$U/_addDemo\
+ 	$U/_add_with_arg\
+ 	$U/_ps\
++	$U/_sleep\
+ 
+ 
+ fs.img: mkfs/mkfs README $(UPROGS)
+diff --git a/kernel/syscall.c b/kernel/syscall.c
+index 4087d30..a5bfb61 100644
+--- a/kernel/syscall.c
++++ b/kernel/syscall.c
+@@ -104,6 +104,7 @@ extern uint64 sys_mkdir(void);
+ extern uint64 sys_close(void);
+ extern uint64 sys_sync(void);
+ extern uint64 sys_ps(void); //new system call for ps
++extern uint64 sys_sleep(void); //new system call for sleep with parameter
+ 
+ // An array mapping syscall numbers from syscall.h
+ // to the function that handles the system call.
+@@ -132,6 +133,9 @@ static uint64 (*syscalls[])(void) = {
+   [SYS_close]   sys_close,
+   [SYS_sync]    sys_sync,
+   [SYS_ps]      sys_ps,
++  [SYS_sleep]   sys_sleep, //new system call for sleep with parameter
++
++
+   // clang-format on
+ };
+ 
+diff --git a/kernel/syscall.h b/kernel/syscall.h
+index d690dbc..6493b7e 100644
+--- a/kernel/syscall.h
++++ b/kernel/syscall.h
+@@ -22,3 +22,4 @@
+ #define SYS_close  21
+ #define SYS_sync   22
+ #define SYS_ps     23    //new system call for ps
++#define SYS_sleep  24   //new system call for sleep with parameter
+diff --git a/kernel/sysproc.c b/kernel/sysproc.c
+index 2ca8947..b36c28a 100644
+--- a/kernel/sysproc.c
++++ b/kernel/sysproc.c
+@@ -7,6 +7,42 @@
+ #include "proc.h"
+ #include "vm.h"
+ 
++extern uint ticks;
++extern struct spinlock tickslock;
++
++
++uint64
++sys_sleep(void)
++{
++  int n = 0;
++  uint ticks0;
++  // Read the first syscall argument (ticks) into n.
++  // Here we do not compare the return of argint; we just use it to store n.
++  
++  argint(0, &n);
++  
++  
++  // Defensive check: non-positive sleep duration does nothing.
++  if(n <= 0)
++    return 0;
++
++  acquire(&tickslock);
++  ticks0 = ticks;
++
++  while(ticks - ticks0 < (uint)n){
++  // If this process has been killed while sleeping, abort.
++    if(myproc()->killed){
++      release(&tickslock);
++    return -1;
++  }
++  // Sleep on the address of ticks while holding tickslock.
++  sleep(&ticks, &tickslock);
++  // When sleep() returns, tickslock has been re-acquired.
++}
++  release(&tickslock);
++  return 0;
++}
++
+ uint64
+ sys_ps(void)
+ {
+diff --git a/user/user.h b/user/user.h
+index b69e545..8aed03a 100644
+--- a/user/user.h
++++ b/user/user.h
+@@ -26,6 +26,7 @@ int pause(int);
+ int uptime(void);
+ int sync(void);
+ int ps(void);  //new system call for ps
++int sleep(int); //new system call for sleep with parameter
+ 
+ // ulib.c
+ int stat(const char *, struct stat *);
+diff --git a/user/usys.pl b/user/usys.pl
+index fec1088..4081c35 100755
+--- a/user/usys.pl
++++ b/user/usys.pl
+@@ -44,3 +44,4 @@ entry("pause");
+ entry("uptime");
+ entry("sync");
+ entry("ps"); #new system call for ps
++entry("sleep"); #new system call for sleep with parameter
