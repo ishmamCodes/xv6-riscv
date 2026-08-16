@@ -147,6 +147,7 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_sync\
 	$U/_addDemo\
+	$U/_add_with_arg\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
